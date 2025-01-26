@@ -1,0 +1,324 @@
+@extends('layouts.admin')
+
+@section('title', 'تعديل القسم')
+
+@section('content')
+<div class="container-fluid py-6">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+            <div>
+                <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 drop-shadow-sm">
+                    <i class="fas fa-edit mr-2 animate-pulse"></i>تعديل القسم
+                </h2>
+                <p class="mt-3 text-base text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-info-circle ml-1"></i>
+                    قم بتعديل معلومات القسم وإعداداته
+                </p>
+            </div>
+            <a href="{{ route('admin.sections.index') }}" 
+               class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white text-sm font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-300 ease-in-out transform hover:scale-105">
+                <i class="fas fa-arrow-right ml-2"></i>
+                عودة للأقسام
+            </a>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+        <form action="{{ route('admin.sections.update', $section) }}" method="POST">
+            @csrf
+            @method('PUT')
+            
+            <div class="p-8 space-y-6">
+                <!-- Title -->
+                <div class="relative group">
+                    <label for="title" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-heading ml-1"></i>العنوان
+                    </label>
+                    <input type="text" name="title" id="title"
+                            class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('title') border-red-500 @enderror"
+                            value="{{ old('title', $section->title) }}" required>
+                    @error('title')
+                        <p class="mt-2 text-sm text-red-500 flex items-center">
+                            <i class="fas fa-exclamation-circle ml-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                <!-- Type -->
+                <div class="relative group">
+                    <label for="type" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-layer-group ml-1"></i>نوع القسم
+                    </label>
+                    <select name="type" id="type" 
+                            class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('type') border-red-500 @enderror">
+                        <option value="">-- اختر نوع القسم --</option>
+                        <optgroup label="أقسام عامة">
+                            <option value="latest" {{ old('type', $section->type) == 'latest' ? 'selected' : '' }}>آخر الأخبار</option>
+                            <option value="popular" {{ old('type', $section->type) == 'popular' ? 'selected' : '' }}>الأكثر قراءة</option>
+                            <option value="featured" {{ old('type', $section->type) == 'featured' ? 'selected' : '' }}>الأخبار المميزة</option>
+                            <option value="custom" {{ old('type', $section->type) == 'custom' ? 'selected' : '' }}>محتوى مخصص</option>
+                        </optgroup>
+                        <optgroup label="التصنيفات">
+                            @foreach($categories as $category)
+                                <option value="category_{{ $category->id }}" 
+                                    {{ (old('type', $section->type) == 'category' && old('category_id', $section->category_id) == $category->id) ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    </select>
+                    @error('type')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <!-- محتوى مخصص -->
+                <div id="contentGroup" class="hidden relative group">
+                    <label for="content" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-edit ml-1"></i>المحتوى المخصص
+                    </label>
+                    <textarea name="content" id="content" rows="5"
+                            class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('content') border-red-500 @enderror">{{ old('content', $section->content) }}</textarea>
+                    @error('content')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <!-- Template -->
+                <div class="relative group">
+                    <label for="template" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-palette ml-1"></i>قالب العرض
+                    </label>
+                    <select name="template" id="template" 
+                            class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('template') border-red-500 @enderror">
+                        @foreach($templates as $value => $label)
+                            <option value="{{ $value }}" {{ old('template', $section->template) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('template')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <!-- Category -->
+                <div id="categoryGroup" class="hidden relative group">
+                    <label for="category_id" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-folder ml-1"></i>التصنيف
+                    </label>
+                    <select name="category_id" id="category_id"
+                             class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('category_id') border-red-500 @enderror">
+                        <option value="">-- اختر التصنيف --</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('category_id', $section->category_id) == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('category_id')
+                        <p class="mt-2 text-sm text-red-500 flex items-center">
+                            <i class="fas fa-exclamation-circle ml-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                <!-- Style Options -->
+                <div class="relative group">
+                    <label class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                        <i class="fas fa-paint-brush ml-1"></i>خيارات التصميم
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- لون الخلفية -->
+                        <div>
+                            <label for="style_background_color" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                لون الخلفية
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="style_background_color" name="style[background_color]" 
+                                    value="{{ old('style.background_color', $section->style['background_color'] ?? '#ffffff') }}"
+                                    class="h-10 w-20 p-1 rounded border border-gray-300 dark:border-gray-600">
+                                <span class="text-sm text-gray-600 dark:text-gray-400" id="background_color_hex">#ffffff</span>
+                            </div>
+                        </div>
+
+                        <!-- لون العنوان -->
+                        <div>
+                            <label for="style_title_color" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                لون العنوان
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="style_title_color" name="style[title_color]" 
+                                    value="{{ old('style.title_color', $section->style['title_color'] ?? '#2c3e50') }}"
+                                    class="h-10 w-20 p-1 rounded border border-gray-300 dark:border-gray-600">
+                                <span class="text-sm text-gray-600 dark:text-gray-400" id="title_color_hex">#2c3e50</span>
+                            </div>
+                        </div>
+
+                        <!-- لون الحدود -->
+                        <div>
+                            <label for="style_border_color" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                لون الحدود
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="style_border_color" name="style[border_color]" 
+                                    value="{{ old('style.border_color', $section->style['border_color'] ?? '#3498db') }}"
+                                    class="h-10 w-20 p-1 rounded border border-gray-300 dark:border-gray-600">
+                                <span class="text-sm text-gray-600 dark:text-gray-400" id="border_color_hex">#3498db</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- معاينة القالب -->
+                <div class="relative group">
+                    <label class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                        <i class="fas fa-eye ml-1"></i>معاينة القالب
+                    </label>
+                    <div id="templatePreview" class="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg p-4 min-h-[200px]">
+                        <div class="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+                            <p><i class="fas fa-paint-roller ml-2"></i>سيتم عرض معاينة للقالب المحدد هنا</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Items Count -->
+                <div class="relative group">
+                    <label for="items_count" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-list-ol ml-1"></i>عدد العناصر
+                    </label>
+                    <input type="number" name="items_count" id="items_count"
+                            class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('items_count') border-red-500 @enderror"
+                            value="{{ old('items_count', $section->items_count) }}" min="1">
+                    @error('items_count')
+                        <p class="mt-2 text-sm text-red-500 flex items-center">
+                            <i class="fas fa-exclamation-circle ml-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                <!-- Order -->
+                <div class="relative group">
+                    <label for="order" class="block text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-sort-numeric-down ml-1"></i>الترتيب
+                    </label>
+                    <input type="number" name="order" id="order"
+                            class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200 @error('order') border-red-500 @enderror"
+                            value="{{ old('order', $section->order) }}" min="1">
+                    @error('order')
+                        <p class="mt-2 text-sm text-red-500 flex items-center">
+                            <i class="fas fa-exclamation-circle ml-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                <!-- Status -->
+                <div class="relative group">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="status" value="1" {{ old('status', $section->status) ? 'checked' : '' }}
+                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors duration-200">
+                        <span class="mr-2 text-base font-semibold text-gray-700 dark:text-gray-300">
+                            <i class="fas fa-toggle-on ml-1"></i>تفعيل القسم
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="px-8 py-5 bg-gray-50 dark:bg-gray-700 border-t border-gray-100 dark:border-gray-600">
+                <button type="submit" 
+                        class="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ease-in-out transform hover:scale-105">
+                    <i class="fas fa-save ml-2"></i>
+                    حفظ التغييرات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تحديث قيم الألوان المعروضة
+        function updateColorHex(inputId, spanId) {
+            const input = document.getElementById(inputId);
+            const span = document.getElementById(spanId);
+            if (input && span) {
+                input.addEventListener('input', function() {
+                    span.textContent = input.value.toUpperCase();
+                });
+                // تحديث القيمة الأولية
+                span.textContent = input.value.toUpperCase();
+            }
+        }
+
+        // تحديث جميع حقول الألوان
+        updateColorHex('style_background_color', 'background_color_hex');
+        updateColorHex('style_title_color', 'title_color_hex');
+        updateColorHex('style_border_color', 'border_color_hex');
+
+        // معاينة القالب
+        const templateSelect = document.getElementById('template');
+        const templatePreview = document.getElementById('templatePreview');
+        const previewImages = {
+            'grid': '/previews/templates/grid.png',
+            'featured': '/previews/templates/featured.png',
+            'featured_with_list': '/previews/templates/featured_with_list.png',
+            'fullwidth': '/previews/templates/fullwidth.png',
+            'masonry': '/previews/templates/masonry.png',
+            'news_grid': '/previews/templates/news_grid.png'
+        };
+
+        function updateTemplatePreview() {
+            const selectedTemplate = templateSelect.value;
+            const previewImage = previewImages[selectedTemplate];
+            
+            if (previewImage) {
+                templatePreview.innerHTML = `
+                    <img src="${previewImage}" alt="${selectedTemplate} preview" 
+                         class="w-full h-auto rounded shadow-sm">
+                `;
+            } else {
+                templatePreview.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-400">
+                        <p><i class="fas fa-exclamation-circle ml-2"></i>لا تتوفر معاينة لهذا القالب</p>
+                    </div>
+                `;
+            }
+        }
+
+        if (templateSelect && templatePreview) {
+            templateSelect.addEventListener('change', updateTemplatePreview);
+            // تحديث المعاينة عند تحميل الصفحة
+            updateTemplatePreview();
+        }
+
+        // إخفاء/إظهار الحقول حسب نوع القسم
+        const typeSelect = document.getElementById('type');
+        const categoryGroup = document.getElementById('categoryGroup');
+        const contentGroup = document.getElementById('contentGroup');
+        const categoryInput = document.getElementById('category_id');
+        const contentInput = document.getElementById('content');
+
+        function toggleFields() {
+            if (typeSelect.value === 'category') {
+                categoryGroup.classList.remove('hidden');
+                contentGroup.classList.add('hidden');
+                categoryInput.required = true;
+                contentInput.required = false;
+            } else if (typeSelect.value === 'custom') {
+                categoryGroup.classList.add('hidden');
+                contentGroup.classList.remove('hidden');
+                categoryInput.required = false;
+                contentInput.required = true;
+            } else {
+                categoryGroup.classList.add('hidden');
+                contentGroup.classList.add('hidden');
+                categoryInput.required = false;
+                contentInput.required = false;
+            }
+        }
+
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleFields);
+            toggleFields(); // تشغيل عند تحميل الصفحة
+        }
+    });
+</script>
+@endpush

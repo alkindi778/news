@@ -1,0 +1,1 @@
+This directory contains template preview images for the admin panel.
