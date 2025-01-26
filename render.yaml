@@ -1,9 +1,11 @@
 services:
   - type: web
-    name: laravel
+    name: laravel-news
+    plan: free
     env: php
-    buildCommand: composer install && php artisan config:cache && php artisan route:cache && php artisan view:cache
-    startCommand: heroku-php-apache2 public/
+    region: singapore
+    buildCommand: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
     envVars:
       - key: APP_NAME
         value: NewsPortal
@@ -11,10 +13,7 @@ services:
         value: production
       - key: APP_DEBUG
         value: false
-      - key: APP_URL
-        fromService:
-          type: web
-          name: laravel
-          property: host
+      - key: APP_KEY
+        value: base64:HiW83skc7dSUAPh7m5PP1jHcMru8QdEvyKjStpYX2wY=
       - key: DB_CONNECTION
         value: mysql
